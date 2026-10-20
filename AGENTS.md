@@ -11,9 +11,9 @@ UniOne ASP.NET Core — ASP.NET Core integration of the UniOne .NET (C#) SDK (`U
   dotnet build -c Release
   ```
 
-- **Source label.** Every request carries the query parameter `platform=aspnetcore.2.1.2,dotnet-sdk.2.1.2` (this package, then the SDK it is built on).
+- **Source label.** Every request carries the query parameter `platform=aspnetcore.2.1.3,dotnet-sdk.2.1.3` (this package, then the SDK it is built on).
 - **Tests.** Before a release the generator installs the package into a test app of ASP.NET Core and checks the client, the webhook endpoint against a mock of the API: no real API key, no real sends.
-- **Release.** The version (2.1.2 in the .csproj) and the tag `v2.1.2` come from the generator; README.md states the Web API version the release was generated from.
+- **Release.** The version (2.1.3 in the .csproj) and the tag `v2.1.3` come from the generator; README.md states the Web API version the release was generated from.
 - **Secrets.** Never commit API keys; the examples read `UNIONE_API_KEY` from the environment.
 
 ## Integrating UniOne with this package

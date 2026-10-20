@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
             {
                 BaseUrl = string.IsNullOrEmpty(options.Host) ? Configuration.DefaultBaseUrl : Configuration.BaseUrlFor(options.Host),
                 Timeout = timeout,
-                Platform = "aspnetcore.2.1.2",
+                Platform = "aspnetcore.2.1.3",
             };
             var http = new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) })
             {

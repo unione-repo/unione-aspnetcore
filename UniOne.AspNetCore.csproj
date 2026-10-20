@@ -10,7 +10,7 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <PackageId>UniOne.AspNetCore</PackageId>
-    <Version>2.1.2</Version>
+    <Version>2.1.3</Version>
     <Authors>UniOne</Authors>
     <Description>UniOne Web API for ASP.NET Core: API client in DI, webhook endpoint</Description>
     <PackageTags>UniOne;email;aspnetcore;webhook</PackageTags>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="UniOne" Version="2.1.2" />
+    <PackageReference Include="UniOne" Version="2.1.3" />
   </ItemGroup>
 
   <ItemGroup>
