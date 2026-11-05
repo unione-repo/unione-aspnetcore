@@ -19,17 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: The tag is the version of the package
-        run: test "$GITHUB_REF_NAME" = "v2.3.1" || { echo "tag $GITHUB_REF_NAME, package v2.3.1"; exit 1; }
-      - name: Wait for the SDK UniOne 2.3.0 in NuGet
-        timeout-minutes: 95
-        run: |
-          for i in $(seq 1 180); do
-            if curl -fsSL -A "release-workflow (github.com/$GITHUB_REPOSITORY)" -o /tmp/sdk "https://api.nuget.org/v3-flatcontainer/unione/index.json" && grep -qF '"2.3.0"' /tmp/sdk; then
-              echo "UniOne 2.3.0 is in NuGet"; exit 0
-            fi
-            echo "UniOne 2.3.0 is not in NuGet yet ($i/180)"; sleep 30
-          done
-          echo "::error::UniOne 2.3.0 did not appear in NuGet in 90 min: publish the SDK first"; exit 1
+        run: test "$GITHUB_REF_NAME" = "v2.3.2" || { echo "tag $GITHUB_REF_NAME, package v2.3.2"; exit 1; }
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"

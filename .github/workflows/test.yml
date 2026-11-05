@@ -11,36 +11,45 @@ on:
 permissions:
   contents: read
 
+# a new push of the ref cancels the run of the previous one (called by release.yml: the group of the tag)
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for the SDK UniOne 2.3.1 in NuGet
+        timeout-minutes: 15
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsSL -A "release-workflow (github.com/$GITHUB_REPOSITORY)" -o /tmp/sdk "https://api.nuget.org/v3-flatcontainer/unione/index.json" && grep -qF '"2.3.1"' /tmp/sdk; then
+              echo "UniOne 2.3.1 is in NuGet"; exit 0
+            fi
+            echo "UniOne 2.3.1 is not in NuGet yet ($i/20)"; sleep 30
+          done
+          echo "::error::UniOne 2.3.1 did not appear in NuGet in 10 min: publish the SDK first"; exit 1
   test:
+    needs: sdk
     runs-on: ubuntu-22.04
-    timeout-minutes: 140
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
         v: ["8.0.x"]
     steps:
       - uses: actions/checkout@v4
-      - name: Wait for the SDK UniOne 2.3.0 in NuGet
-        timeout-minutes: 95
-        run: |
-          for i in $(seq 1 180); do
-            if curl -fsSL -A "release-workflow (github.com/$GITHUB_REPOSITORY)" -o /tmp/sdk "https://api.nuget.org/v3-flatcontainer/unione/index.json" && grep -qF '"2.3.0"' /tmp/sdk; then
-              echo "UniOne 2.3.0 is in NuGet"; exit 0
-            fi
-            echo "UniOne 2.3.0 is not in NuGet yet ($i/180)"; sleep 30
-          done
-          echo "::error::UniOne 2.3.0 did not appear in NuGet in 90 min: publish the SDK first"; exit 1
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ matrix.v }}
       - name: Install the dependencies (the mirrors of the registry may serve the SDK some minutes later)
-        timeout-minutes: 25
+        timeout-minutes: 15
         run: |
-          for i in $(seq 1 40); do
+          for i in $(seq 1 20); do
             if ( dotnet restore --no-cache ); then exit 0; fi
-            echo "the dependencies can not be installed yet ($i/40)"; sleep 30
+            echo "the dependencies can not be installed yet ($i/20)"; sleep 30
           done
-          echo "::error::the dependencies (the SDK) can not be installed in 20 min"; exit 1
+          echo "::error::the dependencies (the SDK) can not be installed in 10 min"; exit 1
       - run: |
           dotnet test
