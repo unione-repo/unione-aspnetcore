@@ -27,7 +27,9 @@ public static class EndpointRouteBuilderExtensions
     public static IEndpointConventionBuilder MapUniOneWebhook(this IEndpointRouteBuilder endpoints, string? path = null)
     {
         var options = endpoints.ServiceProvider.GetRequiredService<IOptions<UniOneOptions>>().Value;
-        return endpoints.MapMethods(path ?? options.Webhook.Path, new[] { "GET", "HEAD", "POST" }, (Delegate)HandleAsync);
+        // the API calls it without credentials (the signature is checked here): open also under a FallbackPolicy
+        return endpoints.MapMethods(path ?? options.Webhook.Path, new[] { "GET", "HEAD", "POST" }, (Delegate)HandleAsync)
+            .AllowAnonymous();
     }
 
     private static async Task<IResult> HandleAsync(HttpContext context)

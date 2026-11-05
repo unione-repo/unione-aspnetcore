@@ -1,6 +1,6 @@
 # AGENTS.md
 
-UniOne ASP.NET Core — ASP.NET Core integration of the UniOne .NET (C#) SDK (`UniOne`) for the UniOne transactional email Web API (Web API 1.90). How to integrate UniOne into a ASP.NET Core application comes first; the last section is about changing this package.
+UniOne ASP.NET Core — ASP.NET Core integration of the UniOne .NET (C#) SDK (`UniOne`) for the UniOne transactional email Web API (Web API 1.92). How to integrate UniOne into a ASP.NET Core application comes first; the last section is about changing this package.
 
 ## Integrating UniOne with this package
 
@@ -39,6 +39,8 @@ The API key goes to `UNIONE_API_KEY`.
 | `UniOne:Webhook:Key` | `UNIONE_WEBHOOK_KEY` |  | API key the webhooks are signed with (the key of the user/project of the webhook), if it differs from the API key. |
 | `UniOne:Webhook:Path` | `UNIONE_WEBHOOK_PATH` | `/unione/webhook` | Path of the webhook endpoint. |
 
+`AddUniOne()` returns a builder: `AddWebhookHandler<T>()` registers a scoped `IUniOneWebhookHandler`; every registered handler gets the whole notification (`HandleAsync`) and each of its events (`HandleEventAsync`), both methods have empty default implementations. `MapUniOneWebhook(path)` maps the endpoint (path from the options by default) and returns its convention builder (`.RequireHost(...)`, `.DisableAntiforgery()`...). There is no mail transport: ASP.NET Core has no mailer, send with `client.Email.SendAsync(...)`. The webhook endpoint allows anonymous requests (`AllowAnonymous()`, also under a fallback authorization policy): the notifications are checked by their signature. `UNIONE_TIMEOUT` and `UNIONE_WEBHOOK_PATH` are used only when the timeout / the path is not set in the configuration.
+
 ### API client
 
 The client calls [email/send](https://docs.unione.io/en/web-api-ref#email-send) with all of its options: templates, substitutions, metadata, tracking. Fields of the request and other examples: [.NET (C#) SDK docs](https://github.com/unione-repo/unione-dotnet-sdk/blob/HEAD/docs/Email.md#sendasync).
@@ -65,6 +67,10 @@ app.MapPost("/send", async (UniOneClient client) =>
     Console.WriteLine(response.JobId);
 });
 ```
+
+### Errors
+
+The API client throws the SDK `ApiException`: `Kind` tells what failed (api, network, timeout, invalid_response, invalid_request), `IsRetryable` whether a repeat may succeed (network, timeout, HTTP 429 and 5xx), `Hint` how to fix an API error and `ApiMessage` the message of the API.
 
 ### Webhooks
 
@@ -98,7 +104,7 @@ Register the URL of the endpoint with `webhook/set`, e.g. `https://example.com/u
 - Base URL `https://api.unione.io/en/transactional/api/v1` (an account registered on another host uses that one: `eu1.unione.io`, `us1.unione.io`); every method is POST with a JSON body; auth header `X-API-KEY`. The package does all of it.
 - First email without DNS: `domain/get-sandbox-domain` → `confirmed-email/create` (the user clicks the link within 48 hours) → `email/send` from `noreply@<sandbox-domain>` to the confirmed address. Account API key only; up to 10 confirmed addresses, 100 emails a day. The domain is deleted 31 days after it was created: the next `domain/get-sandbox-domain` call creates a new one with another name, so read the name from the response, never hardcode it.
 - Never ship a sandbox domain as the production sender (it is not in `domain/list`); read `from_email` from config. Production needs a verified domain: `domain/get-dns-records` → DNS records (verification TXT as is, DKIM TXT `v=DKIM1; k=rsa; p=<dkim>` on `<selector>._domainkey`, CNAME `_dmarc` → the `dmarc` field; SPF `include:spf.unione.io` is not in the response) → `domain/validate-verification-record`, `domain/validate-dkim` → `domain/list`.
-- Set `message.idempotence_key` on retryable sends; retry network errors, `429` and `5xx` with backoff, not other errors unchanged. Up to 500 recipients and 10 MB per request with the attachments in base64 (a third larger than the files); always `body.html` or `body.plaintext`.
+- Set `message.idempotence_key` on every send that may be retried. Retry only an error that is retryable (the retryable flag of the SDK error: network, timeout, `429`, `5xx`; never a request you cancelled), with backoff and the same `idempotence_key`, within the one-minute idempotence window; beyond it check your own "sent" record before sending again. Do not retry other errors unchanged. Up to 500 recipients and 10 MB per request with the attachments in base64 (a third larger than the files); always `body.html` or `body.plaintext` (or a `template_id`).
 - Delivery events via webhook (`webhook/set`), not polling; the webhook endpoint of this package checks the `auth` signature (401 when wrong). Keep the listeners fast: answer 200 within 3 seconds and process the events from a queue, otherwise the request is repeated every 10 minutes for 24 hours; take at least 5 parallel requests of up to 100 events each; deduplicate.
 - Keep the default unsubscribe and tracking behaviour; changes go through UniOne support.
 - Do not invent methods or fields. Check the [README](README.md), the [API reference](https://docs.unione.io/en/web-api-ref) or [llms.txt](https://docs.unione.io/llms.txt).
@@ -111,14 +117,14 @@ Register the URL of the endpoint with `webhook/set`, e.g. `https://example.com/u
 
 ## Working on this repository
 
-- **Generated code.** The whole package is generated by the UniOne team from the UniOne Web API OpenAPI spec (Web API 1.90): sources, docs, README.md and this file. Do not hand-edit it: the next release replaces the content of this repository. Report problems and requests in the issues of this repository (https://github.com/unione-repo/unione-aspnetcore).
+- **Generated code.** The whole package is generated by the UniOne team from the UniOne Web API OpenAPI spec (Web API 1.92): sources, docs, README.md and this file. Do not hand-edit it: the next release replaces the content of this repository. Report problems and requests in the issues of this repository (https://github.com/unione-repo/unione-aspnetcore).
 - **Build and check:**
 
   ```bash
   dotnet build -c Release
   ```
 
-- **Source label.** Every request carries the query parameter `platform=aspnetcore.2.2.4,dotnet-sdk.2.2.4` (this package, then the SDK it is built on).
-- **Tests.** Before a release the generator installs the package into a test app of ASP.NET Core and checks the client, the webhook endpoint against a mock of the API: no real API key, no real sends.
-- **Release.** The version (2.2.4 in the .csproj) and the tag `v2.2.4` come from the generator; README.md states the Web API version the release was generated from.
+- **Source label.** Every request carries the query parameter `platform=aspnetcore.2.3.0,dotnet-sdk.2.3.0` (this package, then the SDK it is built on).
+- **Tests.** `dotnet test` runs the tests of the package (with the test tools of ASP.NET Core, not published) offline: the API is faked, never the real API, no real key; they install the SDK version the package requires from the registry. Before a release the generator also installs the package into a test app of ASP.NET Core and checks the client, the webhook endpoint against a mock of the API. The CI (.github/workflows/test.yml) runs the tests on every push and pull request over the supported runtimes; release.yml publishes a tag only after they pass.
+- **Release.** The version (2.3.0 in the .csproj) and the tag `v2.3.0` come from the generator; README.md states the Web API version the release was generated from.
 - **Secrets.** Never commit API keys; the examples read `UNIONE_API_KEY` from the environment.

@@ -1,0 +1,28 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniOne.AspNetCore", "UniOne.AspNetCore.csproj", "{A5379D6B-B89F-55F7-B565-791D50D61A54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniOne.AspNetCore.Tests", "tests\UniOne.AspNetCore.Tests\UniOne.AspNetCore.Tests.csproj", "{D3125094-3AF3-59D9-8391-FEF70C8373EF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A5379D6B-B89F-55F7-B565-791D50D61A54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5379D6B-B89F-55F7-B565-791D50D61A54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5379D6B-B89F-55F7-B565-791D50D61A54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5379D6B-B89F-55F7-B565-791D50D61A54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3125094-3AF3-59D9-8391-FEF70C8373EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3125094-3AF3-59D9-8391-FEF70C8373EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3125094-3AF3-59D9-8391-FEF70C8373EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3125094-3AF3-59D9-8391-FEF70C8373EF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -45,7 +45,7 @@ Settings are read from the environment by default:
 | `UniOne:Webhook:Key` | `UNIONE_WEBHOOK_KEY` |  | API key the webhooks are signed with (the key of the user/project of the webhook), if it differs from the API key. |
 | `UniOne:Webhook:Path` | `UNIONE_WEBHOOK_PATH` | `/unione/webhook` | Path of the webhook endpoint. |
 
-`AddUniOne()` returns a builder: `AddWebhookHandler<T>()` registers a scoped `IUniOneWebhookHandler`; every registered handler gets the whole notification (`HandleAsync`) and each of its events (`HandleEventAsync`), both methods have empty default implementations. `MapUniOneWebhook(path)` maps the endpoint (path from the options by default) and returns its convention builder (`.RequireHost(...)`, `.DisableAntiforgery()`...). There is no mail transport: ASP.NET Core has no mailer, send with `client.Email.SendAsync(...)`.
+`AddUniOne()` returns a builder: `AddWebhookHandler<T>()` registers a scoped `IUniOneWebhookHandler`; every registered handler gets the whole notification (`HandleAsync`) and each of its events (`HandleEventAsync`), both methods have empty default implementations. `MapUniOneWebhook(path)` maps the endpoint (path from the options by default) and returns its convention builder (`.RequireHost(...)`, `.DisableAntiforgery()`...). There is no mail transport: ASP.NET Core has no mailer, send with `client.Email.SendAsync(...)`. The webhook endpoint allows anonymous requests (`AllowAnonymous()`, also under a fallback authorization policy): the notifications are checked by their signature. `UNIONE_TIMEOUT` and `UNIONE_WEBHOOK_PATH` are used only when the timeout / the path is not set in the configuration.
 
 ## Webhooks
 
@@ -115,6 +115,10 @@ app.MapPost("/send", async (UniOneClient client) =>
     Console.WriteLine(response.JobId);
 });
 ```
+
+### Errors
+
+The API client throws the SDK `ApiException`: `Kind` tells what failed (api, network, timeout, invalid_response, invalid_request), `IsRetryable` whether a repeat may succeed (network, timeout, HTTP 429 and 5xx), `Hint` how to fix an API error and `ApiMessage` the message of the API.
 
 ## No domain yet: the test sandbox domain
 

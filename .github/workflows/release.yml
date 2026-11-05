@@ -1,4 +1,4 @@
-# Generated: publishes the package when a tag v* is pushed. Do not edit, the next release replaces it.
+# Generated: publishes the package when a tag v* is pushed and its tests pass. Do not edit, the next release replaces it.
 name: Release
 
 on:
@@ -10,13 +10,26 @@ permissions:
   id-token: write
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
   release:
+    needs: test
     runs-on: ubuntu-latest
     environment: release
     steps:
       - uses: actions/checkout@v4
       - name: The tag is the version of the package
-        run: test "$GITHUB_REF_NAME" = "v2.2.4" || { echo "tag $GITHUB_REF_NAME, package v2.2.4"; exit 1; }
+        run: test "$GITHUB_REF_NAME" = "v2.3.0" || { echo "tag $GITHUB_REF_NAME, package v2.3.0"; exit 1; }
+      - name: Wait for the SDK UniOne 2.3.0 in NuGet
+        timeout-minutes: 95
+        run: |
+          for i in $(seq 1 180); do
+            if curl -fsSL -A "release-workflow (github.com/$GITHUB_REPOSITORY)" -o /tmp/sdk "https://api.nuget.org/v3-flatcontainer/unione/index.json" && grep -qF '"2.3.0"' /tmp/sdk; then
+              echo "UniOne 2.3.0 is in NuGet"; exit 0
+            fi
+            echo "UniOne 2.3.0 is not in NuGet yet ($i/180)"; sleep 30
+          done
+          echo "::error::UniOne 2.3.0 did not appear in NuGet in 90 min: publish the SDK first"; exit 1
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
@@ -24,5 +37,5 @@ jobs:
         id: login
         with:
           user: ${{ vars.NUGET_USER }}
-      - run: dotnet pack -c Release -o out
+      - run: dotnet pack *.csproj -c Release -o out  # the library at the root, not the solution with the tests
       - run: dotnet nuget push "out/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json

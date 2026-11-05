@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
             {
                 BaseUrl = string.IsNullOrEmpty(options.Host) ? Configuration.DefaultBaseUrl : Configuration.BaseUrlFor(options.Host),
                 Timeout = timeout,
-                Platform = "aspnetcore.2.2.4",
+                Platform = "aspnetcore.2.3.0",
             };
             var http = new HttpClient(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) })
             {
@@ -65,7 +65,8 @@ public static class ServiceCollectionExtensions
         {
             options.Host = Env("HOST");
         }
-        if (Env("TIMEOUT") is { } timeout && double.TryParse(timeout, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds))
+        // the variables fill only what the configuration (or the code) did not set
+        if (!options.TimeoutSet && Env("TIMEOUT") is { } timeout && double.TryParse(timeout, NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds))
         {
             options.Timeout = seconds;
         }
@@ -73,7 +74,7 @@ public static class ServiceCollectionExtensions
         {
             options.Webhook.Key = Env("WEBHOOK_KEY");
         }
-        if (Env("WEBHOOK_PATH") is { } path)
+        if ((!options.Webhook.PathSet || string.IsNullOrEmpty(options.Webhook.Path)) && Env("WEBHOOK_PATH") is { } path)
         {
             options.Webhook.Path = path;
         }
