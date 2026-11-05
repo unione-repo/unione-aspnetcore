@@ -184,7 +184,7 @@ public sealed class WrapperTests : IDisposable
 
         var call = Assert.Single(mock.Calls);
         Assert.Equal("/api/system/ping.json", call.Path);
-        Assert.Equal("aspnetcore.2.3.0,dotnet-sdk.2.3.0", call.Platform);
+        Assert.Equal("aspnetcore.2.3.1,dotnet-sdk.2.3.0", call.Platform);
         Assert.Equal(ApiKey, call.ApiKey);
     }
 
